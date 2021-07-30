@@ -1,82 +1,150 @@
-# typescript-npm-package-template
+# testclass
 
-> Template to kickstart creating a Node.js module using TypeScript and VSCode
+Gusto is node.js based library which helps developers to easily write Code generators or analyzers.
+Code can be generated with EJS templates or dynamically using AST.
 
-Inspired by [node-module-boilerplate](https://github.com/sindresorhus/node-module-boilerplate)
-
-## Getting started
-
-**Click the "Use this template" button.**
-
-Alternatively, create a new directory and then run:
-
-```bash
-curl -fsSL https://github.com/ryansonshine/typescript-npm-package-template/archive/main.tar.gz | tar -xz --strip-components=1
-```
-
-**Remove everything from here and above**
-
----
-
-# my-package-name
-
-[![npm package][npm-img]][npm-url]
-[![Build Status][build-img]][build-url]
-[![Downloads][downloads-img]][downloads-url]
-[![Issues][issues-img]][issues-url]
-[![Code Coverage][codecov-img]][codecov-url]
-[![Commitizen Friendly][commitizen-img]][commitizen-url]
-[![Semantic Release][semantic-release-img]][semantic-release-url]
-
-> My awesome module
 
 ## Install
 
 ```bash
-npm install my-package-name
+npm install -D @michalicat/gusto
+```
+
+or
+
+```bash
+yarn add -D @michalicat/gusto
 ```
 
 ## Usage
 
-```ts
-import { myPackage } from 'my-package-name';
+gusto.config.js in the root of your project:
 
-myPackage('hello');
-//=> 'hello from my package'
+```js
+const register = CommandRegistry.getCommandRegistry();
+
+register.addCommand('my:cutom:command', new ExampleCommand());
+
+const commandLine = new CommandLine();
+
+commandLine.run(process.argv);
 ```
 
-## API
+## Example of Code generator using Templates (ejs)
 
-### myPackage(input, options?)
+```ts
 
-#### input
+class ComponentGenerator extends AbstractGenerator implements CommandInterface<Answers> {
+  public static TEMPLATE = './template.ejs';
+  public static INDEX = './index.ejs';
+  public static INDEX_STYLES = './index.styles.ejs';
 
-Type: `string`
+  private _currentDirectory: string | null = null;
 
-Lorem ipsum.
+  public async init(command: Command<Questions, Answers>): Promise<void> {
+    this._currentDirectory = command.getCurrentDirectory();
 
-#### options
+    await command.setUserPromptQuestions([
+      {
+        type: 'input',
+        name: 'componentName',
+        message: "What's your component name?",
+      },
+    ]);
+  }
 
-Type: `object`
+  public execute(args: string[], opts: CommandOptionsInterface, answers: Answers): void {
+    const componentName = answers.componentName;
 
-##### postfix
+    this.renderComponent(componentName);
+    this.renderIndex(componentName);
+    this.renderStyles(componentName);
+  }
 
-Type: `string`
-Default: `rainbows`
+  private renderComponent(componentName: string): void {
+    const componentTemplatePath = path.resolve(__dirname, ComponentGenerator.TEMPLATE);
 
-Lorem ipsum.
+    const componentTargetPath = path.resolve(this._currentDirectory || '', `${componentName}/${componentName}.tsx`);
 
-[build-img]:https://github.com/ryansonshine/typescript-npm-package-template/actions/workflows/release.yml/badge.svg
-[build-url]:https://github.com/ryansonshine/typescript-npm-package-template/actions/workflows/release.yml
-[downloads-img]:https://img.shields.io/npm/dt/typescript-npm-package-template
-[downloads-url]:https://www.npmtrends.com/typescript-npm-package-template
-[npm-img]:https://img.shields.io/npm/v/typescript-npm-package-template
-[npm-url]:https://www.npmjs.com/package/typescript-npm-package-template
-[issues-img]:https://img.shields.io/github/issues/ryansonshine/typescript-npm-package-template
-[issues-url]:https://github.com/ryansonshine/typescript-npm-package-template/issues
-[codecov-img]:https://codecov.io/gh/ryansonshine/typescript-npm-package-template/branch/main/graph/badge.svg
-[codecov-url]:https://codecov.io/gh/ryansonshine/typescript-npm-package-template
-[semantic-release-img]:https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg
-[semantic-release-url]:https://github.com/semantic-release/semantic-release
-[commitizen-img]:https://img.shields.io/badge/commitizen-friendly-brightgreen.svg
-[commitizen-url]:http://commitizen.github.io/cz-cli/
+    this.render(componentTemplatePath, componentTargetPath, {
+      ComponentName: componentName,
+    });
+  }
+
+  private renderIndex(componentName: string): void {
+    const indexTemplatePath = path.resolve(__dirname, ComponentGenerator.INDEX);
+    const indexTargetPath = path.resolve(this._currentDirectory || '', `${componentName}/index.ts`);
+
+    this.render(indexTemplatePath, indexTargetPath, {
+      ComponentName: componentName,
+    });
+  }
+
+  private renderStyles(componentName: string): void {
+    const stylesTemplatePath = path.resolve(__dirname, ComponentGenerator.INDEX_STYLES);
+    const stylesTargetPath = path.resolve(this._currentDirectory || '', `${componentName}/index.styles.tsx`);
+
+    this.render(stylesTemplatePath, stylesTargetPath, {
+      ComponentName: componentName,
+    });
+  }
+}
+
+export default ComponentGenerator;
+```
+
+template.ejs
+
+
+```ts
+import React, {
+  Component,
+  ReactElement,
+} from 'react';
+
+
+export interface I<%= ComponentName %>Props {
+}
+export interface I<%= ComponentName %>State {
+}
+
+class <%= ComponentName %> extends Component< I<%= ComponentName %>Props, I<%= ComponentName %>State >
+  {
+    public render(): ReactElement
+{
+
+  return (
+    <>Hello World</>
+);
+}
+}
+
+
+export default  <%= ComponentName %>;
+```
+index.ejs
+
+```ts
+import <%= ComponentName %> from './<%= ComponentName %>';
+
+export default  <%= ComponentName %>;
+```
+
+Your package.json:
+
+```json
+...
+{
+  "scripts": {
+    ...
+    "gusto": "node gusto.config",
+    ...
+  }
+}
+...
+
+```
+
+## Example of code analyzer/linter
+
+// TODO: Write docs.
