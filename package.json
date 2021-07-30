@@ -1,5 +1,5 @@
 {
-  "name": "gusto",
+  "name": "@michalicat/gusto",
   "version": "0.0.1-development",
   "description": "Easily writing custom Code generators or code analyzers.",
   "main": "./lib/src/index.js",

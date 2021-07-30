@@ -7,6 +7,8 @@ import AbstractGenerator from './src/CommandLine/generators';
 import Ast from './src/Services/Ast';
 import FileService from './src/Services/FileService';
 import Log from './src/Services/Log';
+import { InterfaceDeclarationStructure, Scope } from 'ts-morph';
+import { CommandRegister } from './src/CommandLine/CommandLine';
 
 export {
   CommandLine,
@@ -18,4 +20,7 @@ export {
   Ast,
   FileService,
   Log,
+  InterfaceDeclarationStructure,
+  Scope,
+  CommandRegister,
 };
